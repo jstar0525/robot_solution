@@ -1,0 +1,23 @@
+
+# data manager settings
+data_manager:
+  input_path:
+    # 3d_data: ./sample_data/sample_data.ply
+    3d_data: ./sample_data/sample_data.pcd
+  output_path:
+    2d_depth_map: ./output/2d_depth_map.png
+    2d_heat_map: ./output/2d_heat_map.png
+
+# logger settings
+logger:
+  path: ./logs/log.log
+  save_log: True
+  print_log: True
+
+# data processor settings
+data_processor:
+  filter:
+    mean_k: 50
+    std_dev_mul_thresh: 1.0
+  projector:
+    vecotr: 10 20 30
