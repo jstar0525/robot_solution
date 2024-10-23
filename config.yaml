@@ -5,7 +5,7 @@ data_manager:
     # 3d_data: ./sample_data/sample_data.ply
     3d_data: ./sample_data/sample_data.pcd
   output_path:
-    2d_depth_map: ./output/2d_depth_map.png
+    2d_depth_map: ./output/2d_depth_map.tif
     2d_heat_map: ./output/2d_heat_map.png
 
 # logger settings
@@ -20,4 +20,27 @@ data_processor:
     mean_k: 50
     std_dev_mul_thresh: 1.0
   projector:
-    vecotr: 10 20 30
+    intrinsic:
+      rows: 3
+      cols: 3
+      # Focal lenght (fx, fy)
+      # Principal point (cx, cy)
+      # [fx 0, cx, 
+      #  0, fy, cy, 
+      #  0, 0, 1]
+      data: [500, 0, 500, 
+             0, 500, 200, 
+             0, 0, 1] 
+    extrinsic:
+      rows: 3
+      cols: 4
+      # Translation matrix : t1 ~ t3
+      # Rotation matrix : r11 ~ r33
+      # [r11, r12, r13, t1, 
+      #  r21, r22, r23, t2, 
+      #  r31, r32, r33, t3]
+      data: [1, 0, 0, 0, 
+             0, -1, 0, 0, 
+             0, 0, -1, 0]
+    # round up image width, heigth to the nearest cfg
+    round_up: 100

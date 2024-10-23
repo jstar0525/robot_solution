@@ -1,8 +1,9 @@
-# robot_solution
-Develop 3D point cloud data processing and projection system
+# test
+
+테스트를 진행합니다.
 
 ## Env.
-Build image (based on ubuntu 24.04, python 3.12.3):
+Build image (based on ubuntu 22.04, python 3.10.12):
 ```
 docker build -t aiv:coding_test .
 ```
@@ -19,4 +20,3 @@ docker run -it \
     aiv:coding_test \
     bash
 ```
-python 버전 : 3.12.3
