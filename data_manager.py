@@ -78,7 +78,6 @@ class DataManager:
         try:
             pcd = o3d.io.read_point_cloud(self.input_data)
             self.manage_logger.info("read point cloud")
-            print(type(pcd))
             return pcd
         except Exception as e:
             self.manage_logger.error("point cloud can not read")

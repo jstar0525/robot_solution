@@ -71,7 +71,7 @@ class DataProcessor:
         #  [0, fy, cy],
         #  [0, 0, 1]]
         self.intrinsic = np.reshape(cfg_int['data'], [cfg_int['rows'], cfg_int['cols']])
-        self.debug_matrix("camera intrinsic", self.intrinsic)
+        self.debug_matrix("camera intrinsic matrix", self.intrinsic)
         
         return self.intrinsic
         
@@ -80,7 +80,7 @@ class DataProcessor:
         #  [r21, r22, r23, t2],
         #  [r31, r32, r33, t3]]
         self.extrinsic = np.reshape(cfg_ext['data'], [cfg_ext['rows'], cfg_ext['cols']])
-        self.debug_matrix("camera extrinsic", self.extrinsic)
+        self.debug_matrix("camera extrinsic matrix", self.extrinsic)
         
         return self.extrinsic
         
@@ -94,6 +94,8 @@ class DataProcessor:
         Returns:
             np.array: normalized pixel + depth points (N x 3)
         """
+        
+        self.processor_logger.info("start project_pcd_to_pixel")
         
         # convert open3d points to numpy array
         pcd = np.asarray(o3d_pcd.points)
@@ -125,7 +127,7 @@ class DataProcessor:
         # projected_points (pixel u, v and depth d)
         self.uvd = self.norm_uv.copy()
         self.uvd[:,2] = np.transpose(self.tf_pcd[2,:])
-        self.debug_matrix("projected_points", self.uvd)
+        self.debug_matrix("projected_points (uvd)", self.uvd)
         
         return self.uvd
     
@@ -140,6 +142,8 @@ class DataProcessor:
             Tuple[np.array, np.array]: depth map과 heat map
         """
         
+        self.processor_logger.info("start create_map")
+        
         u_idx, v_idx = uvd[:,0].astype(np.int64), uvd[:,1].astype(np.int64)
         
         max_uvd = np.max(uvd, axis=0)
@@ -153,7 +157,7 @@ class DataProcessor:
             if np.any(max_uvd < 0):
                 raise InvalidMap
         except Exception as e:
-            self.processor_logger.critical("invalid value of map width or height or depth")
+            self.processor_logger.error("invalid value of map width or height or depth")
             self.processor_logger.exception(e)
             
         
