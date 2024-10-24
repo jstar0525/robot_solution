@@ -1,17 +1,47 @@
+import open3d as o3d
 import numpy as np
 import matplotlib.pyplot as plt
 
+from typing import Tuple
+
 import logger
-from config import Config as cfg
+
 
 class InvalidMap(Exception):
     def __init__(self):
         super().__init__("Unabel to create image")
 
+
 class DataProcessor:
     """
+    3D 데이터를 노이즈 제거와 이미지 투영
+    
+    설정 파일의 설정에 따라
+    3D 데이터를 노이즈 제거, 이미지 투영
+    
+    Args:
+        config (dict): 설정 값
+        
+    Attributes:
+        processor_logger (logging.Logger): 3D 데이터 처리 로거
+        
+        cfg_filter (dict): 노이즈 제거를 위한 설정 값
+        cfg_projector (dict): 이미지 투영을 위한 설정 값
+        
+        intrinsic (np.array): camera intrinsic matrix
+        extrinsic (np.array): camera extrinsic matrix
+        camera_matrix (np.array): camera matrix
+        tf_pcd (np.array): transform points using extrinsic matrix
+        norm_uv (np.array): normalized pixel coordinate points
+        uvd (np.array): normalized pixel + depth points
+        
+        width (int): width of depth, heat map
+        height (int): height of depth, heat map 
+        depth_map (np.array): depth map
+        heat_map (np.array): heat map
     """
-    def __init__(self, config: cfg) -> None:
+    
+    def __init__(self, config: dict) -> None:
 
         # processor_logger
         self.processor_logger = logger.CustomLogger("processor", config.get_log()).logger
@@ -23,11 +53,14 @@ class DataProcessor:
         self.get_intrinsic(self.cfg_projector['intrinsic'])
         self.get_extrinsic(self.cfg_projector['extrinsic'])
         
-    def debug_matrix(self, name: str, matrix: np.array):
+    def debug_matrix(self, name: str, matrix: np.array) -> None:
         self.processor_logger.debug(name+" : "+str(matrix.shape)+"\n"+str(matrix))
 
 
-    def filter(self, pcd, mean_k=50, std_dev_mul_thresh=1.0):
+    def filter(self, pcd: o3d.cpu.pybind.geometry.PointCloud) -> o3d.cpu.pybind.geometry.PointCloud:
+        
+        mean_k = self.cfg_filter['mean_k']
+        std_dev_mul_thresh = self.cfg_filter['std_dev_mul_thresh']
 
         filtered, outlier = pcd.remove_statistical_outlier(mean_k, std_dev_mul_thresh)
         
@@ -42,7 +75,7 @@ class DataProcessor:
         
         return self.intrinsic
         
-    def get_extrinsic(self, cfg_ext):
+    def get_extrinsic(self, cfg_ext: dict) -> np.array:
         # [[r11, r12, r13, t1],
         #  [r21, r22, r23, t2],
         #  [r31, r32, r33, t3]]
@@ -51,10 +84,15 @@ class DataProcessor:
         
         return self.extrinsic
         
-    def project_pcd_to_pixel(self, o3d_pcd):
-        """
-        input : 3D points in 3D sensor frame (N x 3)
-        output : 2D pixels in image frame (N x 2)
+    def project_pcd_to_pixel(self, o3d_pcd: o3d.cpu.pybind.geometry.PointCloud) -> np.array:
+        """camera intrinsic, extrinsic matrix를 사용하여
+        3D point cloud를 이미지로 투영
+
+        Args:
+            o3d_pcd (o3d.cpu.pybind.geometry.PointCloud): 3D point cloud 데이터
+
+        Returns:
+            np.array: normalized pixel + depth points (N x 3)
         """
         
         # convert open3d points to numpy array
@@ -91,7 +129,16 @@ class DataProcessor:
         
         return self.uvd
     
-    def create_map(self, uvd: np.array):
+    def create_map(self, uvd: np.array) -> Tuple[np.array, np.array]:
+        """ 이미지 픽셀 위치와 depth값을 이용하여
+        float타입 depth map과 int 3channel RGB heat map을 생성
+        
+        Args:
+            uvd (np.array): normalized pixel + depth points (N x 3)
+            
+        Returns:
+            Tuple[np.array, np.array]: depth map과 heat map
+        """
         
         u_idx, v_idx = uvd[:,0].astype(np.int64), uvd[:,1].astype(np.int64)
         
@@ -142,7 +189,7 @@ class DataProcessor:
         return self.depth_map, self.heat_map
         
         
-    def projected_depth(self, pcd):
+    def project_pcd(self, pcd: o3d.cpu.pybind.geometry.PointCloud) -> Tuple[np.array, np.array]:
 
         projected_points = self.project_pcd_to_pixel(pcd)
         depth_map, heat_map = self.create_map(projected_points)

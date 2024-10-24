@@ -1,12 +1,13 @@
-
 # data manager settings
 data_manager:
   input_path:
-    # 3d_data: ./sample_data/sample_data.ply
-    3d_data: ./sample_data/sample_data.pcd
+    3d_data: ./sample_data/sample_data.ply
+    # 3d_data: ./sample_data/sample_data.pcd
   output_path:
-    2d_depth_map: ./output/2d_depth_map.tif
-    2d_heat_map: ./output/2d_heat_map.png
+    2d_depth_map: ./toutput/2d_depth_map.tif
+    2d_heat_map: ./toutput/2d_heat_map.png
+    2d_depth_csv: ./toutput/2d_depth.csv
+    3d_filtered_data: ./toutput/3d_filtered_data.ply
 
 # logger settings
 logger:
